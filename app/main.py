@@ -10,7 +10,7 @@ from app.api import router as api_router
 BASE_DIR = Path(__file__).resolve().parent
 STATIC_DIR = BASE_DIR / "static"
 
-app = FastAPI(title="DMHY Tool", version="0.2.0")
+app = FastAPI(title="DMHY Tool", version="0.2.1")
 app.include_router(api_router)
 app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
 
