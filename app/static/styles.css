@@ -59,6 +59,8 @@ button:disabled { cursor: wait; opacity: .6; }
 button.secondary { color: #263241; background: #fff; border-color: #b8c1cc; }
 button.secondary:hover:not(:disabled) { background: #eef2f6; }
 button.small { padding: 7px 11px; font-size: .9rem; }
+button.download { background: #087443; border-color: #087443; }
+button.download:hover:not(:disabled) { background: #075d37; }
 
 .status { min-height: 1.4em; margin: 12px 0 0; color: var(--muted); }
 .status.error { color: var(--danger); }
@@ -93,6 +95,13 @@ textarea {
 }
 .failures { margin-top: 12px; color: var(--danger); }
 .failures ul { margin: 7px 0 0; padding-left: 22px; }
+.download-results { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+.download-result { padding: 12px; border-radius: 8px; background: #f7f9fb; }
+.download-result.success { border-left: 4px solid var(--success); }
+.download-result.failure { border-left: 4px solid var(--danger); }
+.download-result h3 { margin: 0 0 8px; font-size: 1rem; }
+.download-result ul { margin: 0; padding-left: 20px; }
+.download-result li + li { margin-top: 6px; }
 .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
 
 @media (max-width: 680px) {
@@ -101,4 +110,5 @@ textarea {
   .section-title.results-title { align-items: flex-start; flex-direction: column; }
   .actions { justify-content: flex-start; }
   .search-form button { flex: 1 1 auto; }
+  .download-results { grid-template-columns: 1fr; }
 }

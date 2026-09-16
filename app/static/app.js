@@ -15,11 +15,15 @@ const resultsBody = document.querySelector("#results-body");
 const selectAllButton = document.querySelector("#select-all");
 const selectNoneButton = document.querySelector("#select-none");
 const exportButton = document.querySelector("#export-button");
+const downloadButton = document.querySelector("#download-button");
 const exportSection = document.querySelector("#export-section");
 const exportStatus = document.querySelector("#export-status");
 const magnetOutput = document.querySelector("#magnet-output");
 const exportFailures = document.querySelector("#export-failures");
 const copyButton = document.querySelector("#copy-button");
+const downloadConfig = document.querySelector("#download-config");
+const downloadStatus = document.querySelector("#download-status");
+const downloadResults = document.querySelector("#download-results");
 
 function setStatus(element, message, type = "") {
   element.textContent = message;
@@ -140,6 +144,62 @@ function renderResults(results) {
   });
 }
 
+function getSelectedResults() {
+  return [...document.querySelectorAll(".result-check:checked")]
+    .map(item => state.results[Number(item.dataset.index)])
+    .filter(Boolean);
+}
+
+async function loadDownloadStatus() {
+  try {
+    const response = await fetch("/api/download/status");
+    const data = await readJson(response);
+    if (!response.ok) throw new Error();
+    if (data.configured) {
+      downloadConfig.textContent = data.download_dir
+        ? `下载目录：${data.download_dir}`
+        : "下载目录：DSM 默认";
+    } else {
+      downloadConfig.textContent = "尚未配置 DSM 连接";
+    }
+  } catch {
+    downloadConfig.textContent = "无法读取 DSM 配置状态";
+  }
+}
+
+function renderDownloadResults(data) {
+  downloadResults.replaceChildren();
+  if (data.success.length) {
+    const successBox = document.createElement("div");
+    successBox.className = "download-result success";
+    const heading = document.createElement("h3");
+    heading.textContent = "已添加";
+    const list = document.createElement("ul");
+    data.success.forEach(result => {
+      const item = document.createElement("li");
+      item.textContent = result.title || result.resource_id;
+      list.append(item);
+    });
+    successBox.append(heading, list);
+    downloadResults.append(successBox);
+  }
+
+  if (data.failed.length) {
+    const failureBox = document.createElement("div");
+    failureBox.className = "download-result failure";
+    const heading = document.createElement("h3");
+    heading.textContent = "失败";
+    const list = document.createElement("ul");
+    data.failed.forEach(result => {
+      const item = document.createElement("li");
+      item.textContent = `${result.title || result.resource}：${result.reason}`;
+      list.append(item);
+    });
+    failureBox.append(heading, list);
+    downloadResults.append(failureBox);
+  }
+}
+
 async function runSearch(rawKeyword) {
   const keyword = rawKeyword.trim();
   if (!keyword) {
@@ -202,9 +262,7 @@ selectNoneButton.addEventListener("click", () => {
 });
 
 exportButton.addEventListener("click", async () => {
-  const selected = [...document.querySelectorAll(".result-check:checked")]
-    .map(item => state.results[Number(item.dataset.index)])
-    .filter(Boolean);
+  const selected = getSelectedResults();
 
   exportSection.classList.remove("hidden");
   exportFailures.replaceChildren();
@@ -254,6 +312,45 @@ exportButton.addEventListener("click", async () => {
   }
 });
 
+downloadButton.addEventListener("click", async () => {
+  const selected = getSelectedResults();
+  downloadResults.replaceChildren();
+  if (!selected.length) {
+    setStatus(downloadStatus, "请至少勾选一条搜索结果后再加入 Download Station", "error");
+    document.querySelector("#download-section").scrollIntoView({ behavior: "smooth", block: "start" });
+    return;
+  }
+  if (!window.confirm(`准备添加 ${selected.length} 个下载任务，是否继续？`)) {
+    setStatus(downloadStatus, "已取消添加下载任务");
+    return;
+  }
+
+  downloadButton.disabled = true;
+  setStatus(downloadStatus, `正在解析并提交 ${selected.length} 个下载任务…`);
+  try {
+    const response = await fetch("/api/download", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        items: selected.map(item => ({ resource: item.detail_url, title: item.title })),
+      }),
+    });
+    const data = await readJson(response);
+    if (!response.ok) throw new Error(data.detail || `提交失败（HTTP ${response.status}）`);
+    renderDownloadResults(data);
+    setStatus(
+      downloadStatus,
+      `已添加 ${data.success.length} 个任务，失败 ${data.failed.length} 个`,
+      data.success.length ? "success" : "error",
+    );
+  } catch (error) {
+    setStatus(downloadStatus, error.message || "提交 Download Station 失败", "error");
+  } finally {
+    downloadButton.disabled = false;
+    document.querySelector("#download-section").scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+});
+
 copyButton.addEventListener("click", async () => {
   if (!magnetOutput.value) {
     setStatus(exportStatus, "没有可复制的磁力链接", "error");
@@ -272,3 +369,4 @@ copyButton.addEventListener("click", async () => {
 });
 
 renderSavedTerms();
+loadDownloadStatus();

@@ -11,7 +11,7 @@
       <header>
         <p class="eyebrow">DMHY Tool OK</p>
         <h1>动漫花园资源搜索</h1>
-        <p class="subtitle">搜索、勾选并导出磁力链接</p>
+        <p class="subtitle">搜索、勾选并导出磁力链接，或直接加入 Download Station</p>
       </header>
 
       <section class="panel" aria-labelledby="search-heading">
@@ -41,6 +41,7 @@
             <button id="select-all" type="button" class="secondary small">全选</button>
             <button id="select-none" type="button" class="secondary small">全不选</button>
             <button id="export-button" type="button" class="small">测试导出磁力链接</button>
+            <button id="download-button" type="button" class="download small">加入 Download Station</button>
           </div>
         </div>
         <div class="table-wrap">
@@ -69,6 +70,17 @@
         <textarea id="magnet-output" rows="8" readonly
                   placeholder="导出的 magnet 链接会显示在这里"></textarea>
         <div id="export-failures" class="failures"></div>
+      </section>
+
+      <section id="download-section" class="panel" aria-labelledby="download-heading">
+        <div class="section-title">
+          <h2 id="download-heading">Download Station</h2>
+          <span id="download-config" class="hint">正在读取配置…</span>
+        </div>
+        <p id="download-status" class="status" role="status" aria-live="polite">
+          勾选搜索结果后，可直接创建下载任务。
+        </p>
+        <div id="download-results" class="download-results"></div>
       </section>
     </main>
     <script src="/static/app.js" defer></script>

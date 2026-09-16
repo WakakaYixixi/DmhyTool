@@ -6,6 +6,12 @@ services:
     container_name: dmhytool
     ports:
       - "6199:8000"
+    environment:
+      DSM_URL: "${DSM_URL:-}"
+      DSM_USERNAME: "${DSM_USERNAME:-}"
+      DSM_PASSWORD: "${DSM_PASSWORD:-}"
+      DSM_DOWNLOAD_DIR: "${DSM_DOWNLOAD_DIR:-}"
+      DSM_VERIFY_SSL: "${DSM_VERIFY_SSL:-true}"
     restart: unless-stopped
     healthcheck:
       test:
