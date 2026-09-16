@@ -1,13 +1,23 @@
+from pathlib import Path
+
 from fastapi import FastAPI
-from fastapi.responses import PlainTextResponse
+from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
+
+from app.api import router as api_router
 
 
-app = FastAPI(title="DMHY Tool", version="0.1.0")
+BASE_DIR = Path(__file__).resolve().parent
+STATIC_DIR = BASE_DIR / "static"
+
+app = FastAPI(title="DMHY Tool", version="0.2.0")
+app.include_router(api_router)
+app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
 
 
-@app.get("/", response_class=PlainTextResponse)
-async def home() -> str:
-    return "DMHY Tool OK"
+@app.get("/", include_in_schema=False)
+async def home() -> FileResponse:
+    return FileResponse(STATIC_DIR / "index.html")
 
 
 @app.get("/health")

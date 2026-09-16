@@ -1,6 +1,6 @@
-# DMHY Tool 链路验证服务
+# DMHY Tool
 
-这是一个最小可运行的 FastAPI Web 服务，仅用于验证 Synology NAS Container Manager、宿主机 `6199` 端口和 `dmhy.maskpic.com` 的访问链路。项目不包含搜索、RSS、Download Station、认证或数据库功能。
+这是一个轻量的 FastAPI Web 服务，可实时搜索动漫花园资源、在浏览器本地保存搜索词、勾选结果并按需从详情页导出 magnet 链接。项目不包含 RSS 搜索、Download Station、自动追番、认证或数据库功能。
 
 ## 启动
 
@@ -27,7 +27,7 @@ docker compose down
 
 将 `NAS_IP` 替换为 NAS 的局域网 IP：
 
-- 首页：`http://NAS_IP:6199/`，应显示 `DMHY Tool OK`
+- 首页：`http://NAS_IP:6199/`，应显示搜索界面和 `DMHY Tool OK` 状态标识
 - 健康检查：`http://NAS_IP:6199/health`，应返回 `{"status":"ok","service":"dmhytool"}`
 
 也可在 NAS 上执行：
@@ -50,5 +50,22 @@ curl http://127.0.0.1:6199/health
 
 | 方法 | 路径 | 响应 |
 | --- | --- | --- |
-| GET | `/` | 纯文本 `DMHY Tool OK` |
+| GET | `/` | 搜索页面 |
 | GET | `/health` | JSON `{"status":"ok","service":"dmhytool"}` |
+| GET | `/api/search?q=关键词` | 整理后的实时搜索结果 JSON |
+| POST | `/api/magnets` | 按需解析所选 DMHY 详情页的 magnet |
+
+`POST /api/magnets` 请求示例：
+
+```json
+{
+  "items": [
+    {
+      "resource": "https://share.dmhy.org/topics/view/724804_example.html",
+      "title": "资源标题"
+    }
+  ]
+}
+```
+
+后端只允许 DMHY 官方域名下符合 `/topics/view/<数字>_*.html` 格式的详情页，也可直接传数字资源 ID。批量导出并发数限制为 3，单项失败不会中断其他项目。
