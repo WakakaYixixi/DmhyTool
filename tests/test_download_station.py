@@ -39,6 +39,7 @@ def api_info() -> dict[str, object]:
 class DownloadStationClientTests(unittest.IsolatedAsyncioTestCase):
     async def test_login_and_create_task_with_destination(self) -> None:
         requests: list[dict[str, list[str]]] = []
+        task_tokens: list[str | None] = []
 
         def handler(request: httpx.Request) -> httpx.Response:
             data = parse_qs(request.content.decode())
@@ -52,6 +53,7 @@ class DownloadStationClientTests(unittest.IsolatedAsyncioTestCase):
                     "data": {"sid": "test-sid", "synotoken": "test-token"},
                 }
             else:
+                task_tokens.append(request.headers.get("x-syno-token"))
                 payload = {"success": True}
             return httpx.Response(200, json=payload)
 
@@ -67,8 +69,9 @@ class DownloadStationClientTests(unittest.IsolatedAsyncioTestCase):
         )
         create = requests[-1]
         self.assertEqual(create["_sid"], ["test-sid"])
-        self.assertEqual(create["SynoToken"], ["test-token"])
+        self.assertNotIn("SynoToken", create)
         self.assertEqual(create["destination"], ["downloads/anime"])
+        self.assertEqual(task_tokens, ["test-token", "test-token"])
         self.assertNotIn("secret-password", repr(client.settings))
 
     async def test_expired_session_logs_in_again_once(self) -> None:

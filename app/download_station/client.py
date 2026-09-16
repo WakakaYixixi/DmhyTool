@@ -114,10 +114,16 @@ class DownloadStationClient:
             headers={"Accept": "application/json"},
         )
 
-    async def _post(self, path: str, data: dict[str, str]) -> dict[str, Any]:
+    async def _post(
+        self,
+        path: str,
+        data: dict[str, str],
+        *,
+        headers: dict[str, str] | None = None,
+    ) -> dict[str, Any]:
         try:
             async with self._client() as client:
-                response = await client.post(path, data=data)
+                response = await client.post(path, data=data, headers=headers)
         except httpx.TimeoutException as exc:
             raise DownloadStationError("连接 DSM 超时，请稍后重试") from exc
         except httpx.RequestError as exc:
@@ -233,12 +239,13 @@ class DownloadStationClient:
                 "uri": magnet,
                 "_sid": self._sid,
             }
-            if self._syno_token:
-                data["SynoToken"] = self._syno_token
             if self.settings.download_dir:
                 data["destination"] = self.settings.download_dir
 
-            payload = await self._post(self._task_info.path, data)
+            headers = (
+                {"X-SYNO-TOKEN": self._syno_token} if self._syno_token else None
+            )
+            payload = await self._post(self._task_info.path, data, headers=headers)
             if payload.get("success"):
                 return
 
